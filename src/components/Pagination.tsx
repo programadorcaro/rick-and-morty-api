@@ -1,48 +1,67 @@
-'use client';
+import Link from 'next/link';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+function buildListUrl(
+  pageNumber: number,
+  name?: string,
+  status?: string,
+  species?: string
+) {
+  const params = new URLSearchParams();
+  if (name) params.set('name', name);
+  if (status) params.set('status', status);
+  if (species) params.set('species', species);
+  if (pageNumber > 1) params.set('page', String(pageNumber));
+  const qs = params.toString();
+  return qs ? `/?${qs}` : '/';
+}
 
-export default function Pagination({ totalPages, currentPage }: { totalPages: number, currentPage: number }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const createPageURL = useCallback(
-    (pageNumber: number | string) => {
-      const params = new URLSearchParams(searchParams);
-      params.set('page', pageNumber.toString());
-      return `/?${params.toString()}`;
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = (page: number) => {
-    router.push(createPageURL(page));
-  };
-
+export default function Pagination({
+  totalPages,
+  currentPage,
+  name,
+  status,
+  species,
+}: {
+  totalPages: number;
+  currentPage: number;
+  name?: string;
+  status?: string;
+  species?: string;
+}) {
   if (totalPages <= 1) return null;
 
+  const prevHref = buildListUrl(currentPage - 1, name, status, species);
+  const nextHref = buildListUrl(currentPage + 1, name, status, species);
+
   return (
-    <div className="flex items-center justify-center gap-2 mt-12 mb-8">
-      <button
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage <= 1}
-        className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+    <div className="mb-8 mt-12 flex items-center justify-center gap-2">
+      <Link
+        href={prevHref}
+        aria-disabled={currentPage <= 1}
+        className={
+          currentPage <= 1
+            ? 'pointer-events-none rounded-lg bg-gray-100 px-4 py-2 opacity-50 dark:bg-zinc-800'
+            : 'rounded-lg bg-gray-100 px-4 py-2 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+        }
       >
         Previous
-      </button>
-      
-      <span className="text-sm font-medium mx-4">
+      </Link>
+
+      <span className="mx-4 text-sm font-medium">
         Page {currentPage} of {totalPages}
       </span>
 
-      <button
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages}
-        className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+      <Link
+        href={nextHref}
+        aria-disabled={currentPage >= totalPages}
+        className={
+          currentPage >= totalPages
+            ? 'pointer-events-none rounded-lg bg-gray-100 px-4 py-2 opacity-50 dark:bg-zinc-800'
+            : 'rounded-lg bg-gray-100 px-4 py-2 transition-colors hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700'
+        }
       >
         Next
-      </button>
+      </Link>
     </div>
   );
 }
